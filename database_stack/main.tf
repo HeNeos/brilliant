@@ -5,11 +5,16 @@ provider "aws" {
 resource "aws_dynamodb_table" "problems_table" {
   name         = "ProblemsTable"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "CategoryAndDifficulty"
-  range_key    = "ProblemId"
+  hash_key     = "Category"
+  range_key    = "DifficultyAndProblemId"
 
   attribute {
-    name = "CategoryAndDifficulty"
+    name = "Category"
+    type = "S"
+  }
+
+  attribute {
+    name = "DifficultyAndProblemId"
     type = "S"
   }
 
@@ -28,16 +33,16 @@ resource "aws_dynamodb_table" "problems_table" {
 resource "aws_dynamodb_table" "users_table" {
   name         = "UsersTable"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "UserIdAndDifficulty"
-  range_key    = "ProblemId"
+  hash_key     = "UserId"
+  range_key    = "DifficultyAndProblemId"
 
   attribute {
-    name = "UserIdAndDifficulty"
+    name = "UserId"
     type = "S"
   }
 
   attribute {
-    name = "ProblemId"
+    name = "DifficultyAndProblemId"
     type = "S"
   }
 }

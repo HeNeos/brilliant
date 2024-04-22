@@ -46,3 +46,21 @@ resource "aws_dynamodb_table" "users_table" {
     type = "S"
   }
 }
+
+output "problems_table_arn" {
+  value = aws_dynamodb_table.problems_table.arn
+}
+
+output "problems_table_name" {
+  value = aws_dynamodb_table.problems_table.name
+}
+
+resource "local_file" "arn_output" {
+  content  = aws_dynamodb_table.problems_table.arn
+  filename = "${path.module}/.output.arn.txt"
+}
+
+resource "local_file" "arn_name" {
+  content  = aws_dynamodb_table.problems_table.name
+  filename = "${path.module}/.output.name.txt"
+}

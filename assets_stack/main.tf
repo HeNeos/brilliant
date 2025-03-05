@@ -67,6 +67,14 @@ resource "aws_s3_bucket_website_configuration" "problems_bucket_website_configur
   }
 }
 
+resource "aws_s3_bucket_cors_configuration" "problems_bucket_cors" {
+  bucket = aws_s3_bucket.problems_bucket.bucket
+  cors_rule {
+    allowed_methods = ["GET"]
+    allowed_origins = ["*"]
+  }
+}
+
 locals {
   s3_origin_id = "S3-${aws_s3_bucket.problems_bucket.bucket}"
 }

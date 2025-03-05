@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Brilliant Problems</title>
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --primary: 221.2 83.2% 53.3%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%;
+            --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%;
+            --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 221.2 83.2% 53.3%;
+            --radius: 0;
+        }
+
+        .dark {
+            --background: 0 0% 10%;
+            --foreground: 0 0% 90%;
+            --card: 0 0% 15%;
+            --card-foreground: 0 0% 90%;
+            --popover: 0 0% 15%;
+            --popover-foreground: 0 0% 90%;
+            --primary: 0 0% 80%;
+            --primary-foreground: 0 0% 10%;
+            --secondary: 0 0% 20%;
+            --secondary-foreground: 0 0% 90%;
+            --muted: 0 0% 20%;
+            --muted-foreground: 0 0% 60%;
+            --accent: 0 0% 20%;
+            --accent-foreground: 0 0% 90%;
+            --destructive: 0 0% 30%;
+            --destructive-foreground: 0 0% 90%;
+            --border: 0 0% 25%;
+            --input: 0 0% 25%;
+            --ring: 0 0% 50%;
+            --card-hover: 0 0% 20%;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .filter-section {
+            background: hsl(var(--card));
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            border: 1px solid hsl(var(--border));
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        select {
+            padding: 0.75rem;
+            border: 1px solid hsl(var(--input));
+            border-radius: var(--radius);
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: hsl(var(--ring));
+            box-shadow: 0 0 0 2px hsl(var(--ring)/0.1);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 1px solid hsl(var(--input));
+        }
+
+        button.primary {
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+            border-color: hsl(var(--primary));
+        }
+
+        button.secondary {
+            background: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+            border-color: hsl(var(--secondary));
+        }
+
+        .problem-list {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .problem-item {
+            background: hsl(var(--card));
+            padding: 1rem;
+            border-radius: var(--radius);
+            border: 1px solid hsl(var(--border));
+            transition: all 0.2s;
+        }
+
+        .problem-item:hover {
+            background: hsl(var(--card-hover));
+        }
+
+        .problem-item a {
+            color: hsl(var(--primary));
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .page-btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            border: 1px solid hsl(var(--border));
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+        }
+
+        .page-btn.active {
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+            border-color: hsl(var(--primary));
+        }
+
+        #loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 2rem;
+            color: hsl(var(--muted-foreground));
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .filter-section {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            .filter-group {
+                gap: 0.25rem;
+            }
+
+            select, button {
+                padding: 0.5rem;
+                font-size: 0.8rem;
+            }
+
+            button.primary, button.secondary {
+                padding: 0.5rem 1rem;
+            }
+
+            .problem-item {
+                padding: 0.75rem;
+                font-size: 0.85rem;
+            }
+
+            .problem-item a {
+                display: block;
+                margin-bottom: 0.25rem;
+            }
+
+            .pagination {
+                flex-wrap: wrap;
+                gap: 0.25rem;
+            }
+
+            .page-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            #loading {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0.5rem;
+                font-size: 0.85rem;
+            }
+
+            select, button {
+                padding: 0.4rem;
+                font-size: 0.75rem;
+            }
+
+            .problem-item {
+                padding: 0.5rem;
+                font-size: 0.8rem;
+            }
+
+            .page-btn {
+                padding: 0.3rem 0.6rem;
+            }
+        }
+    </style>
+</head>
+<body class="dark">
+    <div class="container">
+        <h1>Problem Bank</h1>
+        
+        <div class="filter-section">
+            <div class="filter-group">
+                <label>Category</label>
+                <select id="categoryFilter">
+                    <option value="">All Categories</option>
+                    <option>Geometry</option>
+                    <option>NumberTheory</option>
+                    <option>Algebra</option>
+                    <option>Combinatorics</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Difficulty</label>
+                <select id="difficultyFilter">
+                    <option value="">All Levels</option>
+                    <option>1</option>
+                    <option>2</option>
+                    <option>3</option>
+                    <option>4</option>
+                    <option>5</option>
+                </select>
+            </div>
+            
+            <div class="filter-group" style="align-self: end;">
+                <button class="primary" onclick="applyFilters()">Apply Filters</button>
+                <button class="secondary" onclick="clearFilters()">Clear</button>
+            </div>
+        </div>
+
+        <div id="loading" style="display: none;">
+            Loading Problems...
+        </div>
+        
+        <ul id="problemList" class="problem-list"></ul>
+        
+        <div id="pagination" class="pagination"></div>
+    </div>
+
+    <script>
+        const API_ENDPOINT = "https://kphxyhvzng.execute-api.us-east-1.amazonaws.com/dev/get_problems";
+        let currentProblems = [];
+        let currentPage = 1;
+        const itemsPerPage = 150;
+
+        async function applyFilters() {
+            document.getElementById('problemList').innerHTML = '';
+            document.getElementById('loading').style.display = 'block';
+            const category = document.getElementById('categoryFilter').value;
+            const difficulty = document.getElementById('difficultyFilter').value;
+
+            try {
+                const params = new URLSearchParams();
+                if (category) params.append('Category', category);
+                if (difficulty) params.append('Difficulty', difficulty);
+
+                const response = await fetch(`${API_ENDPOINT}?${params.toString()}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                currentProblems = await response.json();
+                currentPage = 1;  // Reset to first page on new filter
+                renderProblems();
+                setupPagination();
+            } catch (error) {
+                console.error('Error fetching problems:', error);
+                document.getElementById('problemList').innerHTML = '<li>Error loading problems</li>';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('difficultyFilter').value = '';
+            currentProblems = [];
+            document.getElementById('problemList').innerHTML = '';
+            document.getElementById('pagination').innerHTML = '';
+        }
+
+        function renderProblems() {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginated = currentProblems.slice(start, end);
+
+            const list = document.getElementById('problemList');
+            list.innerHTML = paginated.length > 0 
+                ? paginated.map(problem => `
+                    <li class="problem-item">
+                        <a href="problems/${problem.ProblemId}/${problem.ProblemId}.html">
+                            ${problem.ProblemName.replace(/&#39;/g, "'")}
+                        </a>
+                        <span> | Category: ${problem.Category}</span>
+                        <span> | Difficulty: ${problem.Difficulty}</span>
+                    </li>
+                `).join('')
+                : '<li>No problems found with current filters</li>';
+        }
+
+        function setupPagination() {
+            const pageCount = Math.ceil(currentProblems.length / itemsPerPage);
+            const paginationDiv = document.getElementById('pagination');
+            paginationDiv.innerHTML = '';
+
+            for (let i = 1; i <= pageCount; i++) {
+                const button = document.createElement('button');
+                button.className = 'page-btn' + (i === currentPage ? ' active' : '');
+                button.textContent = i;
+                button.onclick = () => {
+                    currentPage = i;
+                    renderProblems();
+                    updatePagination();
+                    window.scrollTo(0, 0);
+                };
+                paginationDiv.appendChild(button);
+            }
+        }
+
+        function updatePagination() {
+            const buttons = document.querySelectorAll('.page-btn');
+            buttons.forEach((button, index) => {
+                button.classList.toggle('active', index + 1 === currentPage);
+            });
+        }
+    </script>
+</body>
+</html>

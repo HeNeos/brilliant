@@ -99,7 +99,7 @@ resource "aws_lambda_function" "get_problems_lambda" {
   function_name = local.get_problems_function_name
   role          = aws_iam_role.get_problems_lambda_role.arn
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.9"
+  runtime       = "python3.12"
   environment {
     variables = {
       "PROBLEMS_TABLE_NAME" = data.local_file.output_name.content
@@ -146,10 +146,100 @@ resource "aws_lambda_permission" "get_problems_lambda_permission" {
   source_arn    = "arn:aws:execute-api:${local.region}:${local.account_id}:${aws_api_gateway_rest_api.get_problems_api.id}/*"
 }
 
-resource "aws_api_gateway_deployment" "get_problemss_api_deploy" {
+resource "aws_api_gateway_method" "options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.get_problems_api.id
+  resource_id   = aws_api_gateway_resource.get_problems_api.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_integration" {
+  rest_api_id          = aws_api_gateway_rest_api.get_problems_api.id
+  resource_id          = aws_api_gateway_resource.get_problems_api.id
+  http_method          = aws_api_gateway_method.options_method.http_method
+  type                 = "MOCK"
+  passthrough_behavior = "WHEN_NO_MATCH"
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
+resource "aws_api_gateway_method_response" "get_200" {
+  rest_api_id = aws_api_gateway_rest_api.get_problems_api.id
+  resource_id = aws_api_gateway_resource.get_problems_api.id
+  http_method = aws_api_gateway_method.get_problems_api_method.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
+}
+
+# OPTIONS method response
+resource "aws_api_gateway_method_response" "options_200" {
+  rest_api_id = aws_api_gateway_rest_api.get_problems_api.id
+  resource_id = aws_api_gateway_resource.get_problems_api.id
+  http_method = aws_api_gateway_method.options_method.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "cors_4xx" {
+  rest_api_id   = aws_api_gateway_rest_api.get_problems_api.id
+  response_type = "DEFAULT_4XX"
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'http://brilliant-problems.s3-website-us-east-1.amazonaws.com'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "get_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.get_problems_api.id
+  resource_id = aws_api_gateway_resource.get_problems_api.id
+  http_method = aws_api_gateway_method.get_problems_api_method.http_method
+  status_code = aws_api_gateway_method_response.get_200.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'http://brilliant-problems.s3-website-us-east-1.amazonaws.com'"
+  }
+
+  depends_on = [aws_api_gateway_integration.get_problems_api_integration]
+}
+
+resource "aws_api_gateway_integration_response" "options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.get_problems_api.id
+  resource_id = aws_api_gateway_resource.get_problems_api.id
+  http_method = aws_api_gateway_method.options_method.http_method
+  status_code = aws_api_gateway_method_response.options_200.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'",
+    "method.response.header.Access-Control-Allow-Origin"  = "'http://brilliant-problems.s3-website-us-east-1.amazonaws.com'"
+  }
+
+  depends_on = [aws_api_gateway_integration.options_integration]
+}
+
+resource "aws_api_gateway_deployment" "get_problems_api_deploy" {
   rest_api_id = aws_api_gateway_rest_api.get_problems_api.id
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.get_problems_api.body))
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_method.get_problems_api_method,
+      aws_api_gateway_method.options_method,
+      aws_api_gateway_integration.get_problems_api_integration,
+      aws_api_gateway_integration.options_integration,
+      aws_api_gateway_method_response.get_200,
+      aws_api_gateway_integration_response.get_integration_response
+    ]))
   }
   lifecycle {
     create_before_destroy = true
@@ -157,8 +247,9 @@ resource "aws_api_gateway_deployment" "get_problemss_api_deploy" {
   depends_on = [aws_api_gateway_method.get_problems_api_method, aws_api_gateway_integration.get_problems_api_integration]
 }
 
+
 resource "aws_api_gateway_stage" "get_problems_api_stage" {
-  deployment_id = aws_api_gateway_deployment.get_problemss_api_deploy.id
+  deployment_id = aws_api_gateway_deployment.get_problems_api_deploy.id
   rest_api_id   = aws_api_gateway_rest_api.get_problems_api.id
   stage_name    = "dev"
 }
